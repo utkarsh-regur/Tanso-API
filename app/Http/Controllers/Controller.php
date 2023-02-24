@@ -10,7 +10,7 @@ use Illuminate\Routing\Controller as BaseController;
 /**
  * @OA\Info(
  *      version="1.0.0",
- *      title="Tanzo API",
+ *      title="Tanso API",
  *      description="API description",
  *      @OA\Contact(
  *          email="utkarsh.wilson@regur.net"
