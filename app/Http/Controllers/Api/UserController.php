@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Validator;
-use App\Http\Requests\UserRequest;
-use App\Http\Resources\User as UserResource;
 
 use App\Models\User;
 
@@ -233,6 +232,7 @@ class UserController extends Controller
      */
     public function getOneUser($id)
     {
+
         $user = User::find($id);
         if (is_null($user)) {
             return response()->json([
@@ -243,7 +243,7 @@ class UserController extends Controller
         return response()->json([
             'status'=>true,
             'message'=>'User loaded succesfully',
-            'user'=>new UserResource($user)
+            'user'=>$user
         ], 200);
     }
 
@@ -295,9 +295,24 @@ class UserController extends Controller
      *     )
      * )
      */
-    public function createNewUser(UserRequest $request)
+    public function createNewUser(Request $request)
     {
-        $user = User::create($request->all());
+        $validator = Validator::make($request->all(), [ 
+            'email' => 'required|email|unique:users',
+            'password' => 'required',
+            
+        ]);
+
+        if ($validator->fails()) { 
+             return response()->json(['error'=>$validator->errors()], 401);            
+        }
+
+        $input = $request->all();
+
+        $input['password'] = bcrypt($input['password']);
+
+        $user = User::create($input); 
+
         return response()->json([
             'status'=>true,
             'message'=>'User created succesfully',
@@ -362,8 +377,21 @@ class UserController extends Controller
      *     )
      * )
      */
-    public function updateUser(UserRequest $request, User $user, $id)
+    public function updateUser(Request $request, User $user, $id)
     {
+
+        $validator = Validator::make($request->all(), [ 
+            'email' => 'required|email|unique:users',
+            'password' => 'required',
+            
+        ]);
+
+        if ($validator->fails()) { 
+             return response()->json(['error'=>$validator->errors()], 401);            
+        }
+
+        $input = $request->all();
+
         $users = User::all();
         $user = User::find($id);
         

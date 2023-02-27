@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use Validator;
 use Illuminate\Http\Request;
-use App\Http\Requests\ProjectRequest;
-use App\Http\Resources\Project as ProjectResource;
 use Illuminate\Support\Facades\Auth; 
 use Illuminate\Support\Facades\DB;
 
@@ -39,7 +38,7 @@ class ProjectController extends Controller
         $user = Auth::user(); 
         $userId = $user['id'];
 
-        $projects = DB::table('projects')->whereIn('user_id', [$userId] )->get();
+        $projects = Project::where('user_id', $userId)->get();
 
         if (count($projects) == 0) {
             return  response()->json([
@@ -108,8 +107,24 @@ class ProjectController extends Controller
      *     )
      * )
      */
-    public function createProject(ProjectRequest $request)
+    public function createProject(Request $request)
     {
+
+        $validator = Validator::make($request->all(), [ 
+            'name'=>'required|max:50',
+            'description'=>'required',
+            'user_id'=>'required'
+            
+        ]);
+
+        if ($validator->fails()) { 
+             return response()->json(['error'=>$validator->errors()], 401);            
+        }
+
+        $input = $request->all();
+
+        $project = Project::create($input); 
+
         $project = Project::create($request->all());
         return response()->json([
             'status'=>true,
@@ -167,7 +182,7 @@ class ProjectController extends Controller
             return response()->json([
                 'status'=>true,
                 'message'=>'Project loaded succesfully',
-                'project'=>new ProjectResource($project)
+                'project'=> $project
             ], 200);
 
         }
@@ -242,8 +257,22 @@ class ProjectController extends Controller
      *     )
      * )
      */
-    public function updateProject(ProjectRequest $request, Project $project, $id)
+    public function updateProject(Request $request, Project $project, $id)
     {
+        $validator = Validator::make($request->all(), [ 
+            'name'=>'required|max:50',
+            'description'=>'required',
+            'user_id'=>'required'
+            
+        ]);
+
+        if ($validator->fails()) { 
+             return response()->json(['error'=>$validator->errors()], 401);            
+        }
+
+        $input = $request->all();
+
+
         $projects = Project::all();
         $project = Project::find($id);
         
